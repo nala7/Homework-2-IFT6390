@@ -222,7 +222,10 @@ class PracticalHomework2:
         Output:
         - Returns an array of predicted class labels of shape (n_samples,).
         """
-        raise NotImplementedError
+        np.dot(X,w)
+        preds=-1*np.ones(X.shape[0])
+        preds[np.argmax(np.dot(X,w),axis=1)]=1
+        return preds
 
     def fit(
         self, X_train, y_train, X_val, y_val,
@@ -308,4 +311,15 @@ class PracticalHomework2:
         Output:
         - Returns the accuracy score (float) as a percentage of correct predictions.
         """
-        raise NotImplementedError
+        preds = self.infer(X, w)
+        preds = np.argmax(preds, axis=1)
+        return np.mean(preds == y)
+if True:
+    PracticalHomework2().generate_data(42)
+    X_train, y_train, X_val, y_val, X_test, y_test = PracticalHomework2().load_and_preprocess_data()
+    n_classes = np.unique(np.concatenate([y_train, y_val, y_test])).shape[0]
+    PracticalHomework2().make_one_versus_all_labels(y_train, n_classes)
+    PracticalHomework2().compute_loss(X_train, np.array([y_train]*n_classes).T, np.ones((X_train.shape[1], n_classes)), 0.1)
+    PracticalHomework2().compute_gradient(X_train, np.array([y_train]*n_classes).T, np.ones((X_train.shape[1], n_classes)), 0.1)
+    PracticalHomework2().train(X_train, y_train, X_val, y_val, n_classes, 10, 0.01, 0.1, 32)
+    PracticalHomework2().infer(X_train, np.ones((X_train.shape[1], n_classes)))
