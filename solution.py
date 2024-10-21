@@ -190,7 +190,22 @@ class PracticalHomework2:
         Output:
         - Returns the gradient matrix of shape (n_features, n_classes).
         """
-        raise NotImplementedError
+        nfeats=X.shape[1]
+        nclasses=w.shape[1]
+        
+        grad = np.zeros((nfeats, nclasses))
+        indicator = self.make_one_versus_all_labels(y[:, 0], w.shape[1])
+
+        for k in range(nfeats):
+            for j in range(nclasses):
+                yj = y[:, j]
+                der = -1*yj*X[:, k]
+                this_indicator=indicator[:,j]
+                der[this_indicator==-1]=0
+                derL=np.sum(der)
+                derR=C*w[k,j]
+                grad[k,j]=derL+derR
+        return grad
 
     def infer(self, X, w):
         """
