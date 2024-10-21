@@ -166,10 +166,8 @@ class PracticalHomework2:
         pred = np.dot(X, w)
 
         unique_classes = np.arange(w.shape[1])
-        j = np.array([unique_classes] * X.shape[0])
-        sign = lambda x: 1 if x else -1
-        indicator = np.vectorize(sign)([yi == ji for yi, ji in zip(y, j)])
-        lji = np.maximum(0, 2 - pred * indicator)
+        indicator=y
+        lji = np.maximum(0, 2 - pred * indicator)**2
         L = np.sum(np.sum(lji, axis=1), axis=0) / lji.shape[0] + 0.5 * C * np.sum(np.sum(w ** 2, axis=1), axis=0)
         return L
 
@@ -190,23 +188,29 @@ class PracticalHomework2:
         Output:
         - Returns the gradient matrix of shape (n_features, n_classes).
         """
+
+        ## Fast Way
         nfeats=X.shape[1]
-        nclasses=w.shape[1]
-        
-        grad = np.zeros((nfeats, nclasses))
-        indicator = self.make_one_versus_all_labels(y[:, 0], w.shape[1])
+        indicator = y
+        fun=(2-(X@w)*indicator)
+        foo = -2*fun*((fun>0).astype(int))
+        foo.shape
+        items= np.array([foo*X[:,k][:,np.newaxis]*indicator for k in range(nfeats)])
+        vector_= np.mean(items,axis=1) + C*w# feats,classes
 
-        for k in range(nfeats):
-            for j in range(nclasses):
-                yj = y[:, j]
-                der = -1*yj*X[:, k]
-                this_indicator=indicator[:,j]
-                der[this_indicator==-1]=0
-                derL=np.sum(der)
-                derR=C*w[k,j]
-                grad[k,j]=derL+derR
-        return grad
-
+        # Slow Way, but easier to understand
+        if False:
+            grad=np.zeros((nfeats,w.shape[1]))
+            margins=np.zeros((X.shape[0],w.shape[1]))
+            for k in range(nfeats):
+                for j in range(w.shape[1]):
+                    for i in range(X.shape[0]):
+                        margin=2-(X[i]@w[:,j])*indicator[i,j]
+                        margins[i,j]=margin
+                        grad[k,j]+=-2*margin*(margin>0).astype(int)*X[i,k]*indicator[i,j]
+                    grad[k,j]/=X.shape[0]
+                    grad[k,j]+=C*w[k,j]
+        return vector_
     def infer(self, X, w):
         """
         Predicts the class labels for a given feature matrix.
@@ -222,10 +226,12 @@ class PracticalHomework2:
         Output:
         - Returns an array of predicted class labels of shape (n_samples,).
         """
-        np.dot(X,w)
-        preds=-1*np.ones(X.shape[0])
-        preds[np.argmax(np.dot(X,w),axis=1)]=1
-        return preds
+        preds=-1*np.ones((X.shape[0],w.shape[1]))
+
+        # for i in range(X.shape[0]):
+        #     preds[i,arg[i]]=1
+        arg=np.argmax(np.dot(X,w),axis=1)
+        return arg
 
     def fit(
         self, X_train, y_train, X_val, y_val,
@@ -294,7 +300,7 @@ class PracticalHomework2:
             history['val_acc'].append(val_acc)
             
             print(f"Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}, Train Acc = {train_acc:.4f}, Val Acc = {val_acc:.4f}")
-    
+        return w, history
     def compute_accuracy(self, X, y, w):
         """
         Computes the accuracy of predictions using the given weight matrix.
@@ -312,5 +318,11 @@ class PracticalHomework2:
         - Returns the accuracy score (float) as a percentage of correct predictions.
         """
         preds = self.infer(X, w)
-        preds = np.argmax(preds, axis=1)
-        return np.mean(preds == y)
+        #preds = np.argmax(preds, axis=1)
+        return np.sum(preds == y.astype(int).astype(int)) / len(y)
+if False:
+    PracticalHomework2().generate_data(42)
+    X_train, y_train, X_val, y_val, X_test, y_test = PracticalHomework2().load_and_preprocess_data()
+    n_classes=np.unique(np.concatenate((y_train,y_val,y_test))).shape[0]
+    w=PracticalHomework2().fit(X_train, y_train, X_val, y_val, n_classes, 100, 0.001, 0.001, 30)
+    PracticalHomework2().infer(X_train, w)
