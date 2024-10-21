@@ -135,7 +135,16 @@ class PracticalHomework2:
         - Returns a label array of shape (n_samples, num_classes) with -1 for non-class columns
           and 1 for the true class column.
         """
-        raise NotImplementedError
+        m = num_classes
+
+        result = -1 * np.ones((len(y), m), dtype=int)
+
+        # Set the correct label positions to 1
+        for i, label in enumerate(y):
+            result[i, label] = 1
+
+        return result
+
 
     def compute_loss(self, X, y, w, C):
         """
