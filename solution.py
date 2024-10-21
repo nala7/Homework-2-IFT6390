@@ -163,7 +163,15 @@ class PracticalHomework2:
         Output:
         - Returns the scalar loss value (float).
         """
-        raise NotImplementedError
+        pred = np.dot(X, w)
+
+        unique_classes = np.arange(w.shape[1])
+        j = np.array([unique_classes] * X.shape[0])
+        sign = lambda x: 1 if x else -1
+        indicator = np.vectorize(sign)([yi == ji for yi, ji in zip(y, j)])
+        lji = np.maximum(0, 2 - pred * indicator)
+        L = np.sum(np.sum(lji, axis=1), axis=0) / lji.shape[0] + 0.5 * C * np.sum(np.sum(w ** 2, axis=1), axis=0)
+        return L
 
     def compute_gradient(self, X, y, w, C):
         """
