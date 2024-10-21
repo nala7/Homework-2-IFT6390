@@ -141,7 +141,7 @@ class PracticalHomework2:
 
         # Set the correct label positions to 1
         for i, label in enumerate(y):
-            result[i, label] = 1
+            result[int(i), int(label)] = 1
 
         return result
 
